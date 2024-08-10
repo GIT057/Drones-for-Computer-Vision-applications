@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Schritt 1: Bild einlesen
-image = cv2.imread('photo_6174946972373467775_y.jpg')
+image = cv2.imread(r'S:\Studium\Master\SS24\06_SDU_Drones\Computer_Vision\CV\photo_6174946972373467775_y.jpg')
 
 # Schritt 2: Blur (Weichzeichnung)
 blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
