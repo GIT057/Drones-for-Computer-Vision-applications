@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Schritt 1: Bild einlesen
-image = cv2.imread(r'S:\Studium\Master\SS24\06_SDU_Drones\Computer_Vision\CV\photo_6174946972373467775_y.jpg')
+image = cv2.imread(r'S:\Studium\Master\SS24\06_SDU_Drones\Computer_Vision\CV\photo_5319002394492788159_y.jpg')
 
 # Schritt 2: Blur (Weichzeichnung)
 blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
@@ -46,7 +46,7 @@ for i, contour in enumerate(contours):
         text = f'{i+1}: ({cX}, {cY})'
         (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
         # Berechne die Position für den Text (unterhalb des Mittelpunkts)
-        text_x = cX + 10
+        text_x = cX
         text_y = cY + radius + text_height + 10  # Unterhalb des Kreises
         cv2.putText(image, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), font_thickness)
         object_coordinates.append((cX, cY))
