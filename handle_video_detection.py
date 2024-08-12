@@ -1,5 +1,12 @@
 import cv2
 import numpy as np
+import time
+
+# execution times
+algorithm_times = []
+
+# start measuring execution time
+start_time_total = time.time()
 
 last_objects = []
 
@@ -29,7 +36,7 @@ def detect_objects(image):
     object_coordinates = []
     objects = []
 
-    # Zeichnen der Konturen, Kreise und Kreuzes auf dem Originalbild
+    # Filtern der Objekte nach Fläche
     for i, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         if area > 500:  # Größe der Kontur als Filterkriterium
@@ -40,10 +47,13 @@ def detect_objects(image):
             object_coordinates.append((cX, cY))
             objects.append([x, y, w, h])
     
+    end_time = time.time()
+    algorithm_times.append(end_time - start_time)
+
     return object_coordinates, objects
 
-
 # Read the video and extract frames
+start_time_setup = time.time()
 video_path = "input.mp4"
 cap = cv2.VideoCapture(video_path)
 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -61,6 +71,9 @@ n = cap.get(cv2.CAP_PROP_FPS) // f_detect  # detect objects every 5th frame
 # Initialize the last known object positions
 last_objects = []
 
+end_time_setup = time.time()
+
+start_time_handling = time.time()
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -68,7 +81,11 @@ while True:
 
     # Apply object detection every n-th frame and at first frame
     if len(last_objects) == 0 or cap.get(cv2.CAP_PROP_POS_FRAMES) % n == 0:
+        start_time = time.time()
         object_coordinates, objects = detect_objects(frame)
+        end_time = time.time()
+        duration = end_time - start_time
+        algorithm_times.append(duration)
         last_objects = objects
     else:
         objects = last_objects
@@ -76,11 +93,32 @@ while True:
     # Draw circles around the detected objects
     for x, y, w, h in objects:
         cv2.circle(frame, (x + w // 2, y + h // 2), max(w, h) // 2, (0, 255, 0), 2)
-        #cv2.circle(image, (cX, cY), radius, (0, 255, 255), 2)  # Gelber Kreis
-
+ 
     # Write the frame to the output video
     out.write(frame)
 
 cap.release()
 out.release()
+
+end_time_handling = time.time()
+
+# calculate average execution time and standard deviation
+end_time_total = time.time()
+execution_time_total = end_time_total - start_time_total
+algorithm_mean = np.mean(algorithm_times)
+algorithm_std = np.std(algorithm_times)
+algorithm_total = np.sum(algorithm_times)
+non_algorithm_total = execution_time_total - algorithm_total
+setup_total = end_time_setup - start_time_setup
+handling_total = (end_time_handling - start_time_handling) - algorithm_total
+
+# print results
+print(f"Average detection execution time: {algorithm_mean:.2f} seconds")
+print(f"Standard deviation: {algorithm_std:.2f} seconds")
+print(f"Total detection algorithm time: {algorithm_total:.2f} seconds")
+print(f"Setuptime: {setup_total:.2f} seconds")
+print(f"Non-detection-algorithm time: {non_algorithm_total:.2f} seconds")
+print(f"Total handling time: {handling_total:.2f} seconds")
+print(f"Total execution time: {execution_time_total:.2f} seconds")
+
 print("Done!")
