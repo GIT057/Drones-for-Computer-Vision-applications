@@ -5,6 +5,9 @@ import itertools
 
 file_path = r"C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\9 aug 2024\photo_6174946972373467775_y.jpg"
 
+
+#file_path = r"C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\capture_14 Aug 2024\img_15.jpg"
+
 # Load the image
 image = cv2.imread(file_path)
 
@@ -98,19 +101,20 @@ plt.title('Distances Between Pots', fontsize=10)
 plt.axis('off')
 
 # Plot the graph
-plt.subplot(2, 4, 7)
-plt.scatter(*zip(*object_coordinates), c='r', label='Pots')
-for i, (x, y) in enumerate(object_coordinates):
-    plt.text(x, y, f'({x},{y})', fontsize=10, ha='right')
-for i, j in itertools.combinations(range(len(object_coordinates)), 2):
-    plt.plot([object_coordinates[i][0], object_coordinates[j][0]], [object_coordinates[i][1], object_coordinates[j][1]], 'b-')
-plt.xlabel('X (pixels)')
-plt.ylabel('Y (pixels)')
-# Invert the y-axis
-plt.gca().invert_yaxis()
+if object_coordinates:
+    plt.subplot(2, 4, 7)
+    plt.scatter(*zip(*object_coordinates), c='r', label='Pots')
+    for i, (x, y) in enumerate(object_coordinates):
+        plt.text(x, y, f'({x},{y})', fontsize=10, ha='right')
+    for i, j in itertools.combinations(range(len(object_coordinates)), 2):
+        plt.plot([object_coordinates[i][0], object_coordinates[j][0]], [object_coordinates[i][1], object_coordinates[j][1]], 'b-')
+    plt.xlabel('X (pixels)')
+    plt.ylabel('Y (pixels)')
+    # Invert the y-axis
+    plt.gca().invert_yaxis()
 
-plt.title('Graph of Pots', fontsize=10)
-plt.legend()
+    plt.title('Graph of Pots', fontsize=10)
+    plt.legend()
 
 # Display the adjacency matrix
 plt.subplot(2, 4, 8)
