@@ -3,15 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Schritt 1: Bild einlesen
-image = cv2.imread(r'C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\12 aug 2024\img_14.jpg')
-#image = cv2.imread(r'C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\9 aug 2024\photo_6174946972373467775_y.jpg')
+image = cv2.imread(r'C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\9 aug 2024\photo_6174946972373467775_y.jpg')
+
 # Schritt 2: Blur (Weichzeichnung)
 blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
 
 # Schritt 3: Color Based Segmentation (Farbsegmentierung)
 hsv_image = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2HSV)
-lower_brown = np.array([5, 10, 10]) #230, 189, 168
-upper_brown = np.array([235, 137, 197]) #18, 188, 42 ; 30, 255, 255
+lower_brown = np.array([5, 10, 10]) #230, 189, 168; 5, 10, 10
+upper_brown = np.array([30, 255, 255]) #18, 188, 42; 235, 137, 197; 30, 255, 255
 mask = cv2.inRange(hsv_image, lower_brown, upper_brown)
 color_segmented_image = cv2.bitwise_and(blurred_image, blurred_image, mask=mask)
 
@@ -22,8 +22,11 @@ gray_image = cv2.cvtColor(color_segmented_image, cv2.COLOR_BGR2GRAY)
 kernel = np.ones((5, 5), np.uint8)
 morph_filtered_image = cv2.morphologyEx(gray_image, cv2.MORPH_OPEN, kernel)
 
-# Schritt 6: Object Filtering (Kreis hinzufügen)
-contours, _ = cv2.findContours(morph_filtered_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# Schritt 6: Canny Edge Detection
+edges = cv2.Canny(morph_filtered_image, 100, 200)
+
+# Schritt 7: Object Filtering (Kreis hinzufügen)
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Liste zur Speicherung der Objektskoordinaten
 object_coordinates = []
@@ -62,7 +65,8 @@ step_images = [
     ('Blurred Image', blurred_image),
     ('Color Segmentation', color_segmented_image),
     ('Grayscale Image', gray_image),
-    ('Morphological Filtering', morph_filtered_image)
+    ('Morphological Filtering', morph_filtered_image),
+    ('Canny Edges', edges)
 ]
 
 # Anzahl der Bilder
