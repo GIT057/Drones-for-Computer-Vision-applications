@@ -32,8 +32,10 @@ from pymavlink import mavutil
 ###############################################
 # RPi Imports                                 #
 ###############################################
-import picamera
+from picamera2 import Picamera2
 import datetime
+
+os.environ["LIBCAMERA_LOG_LEVELS"] = "2" # stops the camera object from being noisy
 
 ###############################################
 # Drone Control class                         #
@@ -44,7 +46,7 @@ class DroneControl:
         self.armed = False
         self.mode = None
         self.rc_channels = [0,0,0,0,0,0,0,0,0,0,0,0]
-        self.index = 0
+        self.camera_index = 0
         self.debounce = False
         self.uav_position = -1
         self.debug = True
@@ -56,9 +58,9 @@ class DroneControl:
 
         
         self.camera = self.init_camera()  # change camera properties within this function
+        self.camera.start() # start the camera thread
 
         # initialise MAVLink Connection
-        
         self.interface = mavutil.mavlink_connection("/dev/PX4", baud=115200, autoreconnect=True)
 
         self.interface.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS,
@@ -77,12 +79,11 @@ class DroneControl:
         For information on the picamera API, see following URL:
         https://picamera.readthedocs.io/en/release-1.13/api_camera.html#
         '''
-        camera = picamera.PiCamera()
-        camera.resolution = (2592, 1944) # RPI Cam 1
-        #camera.resolution = (3280, 2464) # RPI Cam 2
-        #camera.shutter_speed = 2000 # in microseconds.  1/100 second
+        camera = Picamera2()
         
-        camera.iso = 150 # sensitivity of the camera, higher = brighter, but more noise induced.
+        #camera_config = camera.create_still_configuration({'size':(3280, 2464)}) # RPI Cam 2
+        camera_config = camera.create_still_configuration({'size':(4608, 2592)}) # RPI Cam 3
+        camera.configure(camera_config)
         
         return camera
 
@@ -96,7 +97,10 @@ class DroneControl:
         self.print_debug("New State: {}".format(data))
 
     def capture(self):
-        
+        """
+        This function is responsible for making the folder and capturing the image
+        (and GPS position) when triggered by the dedicated switch RC_Capture in L5.
+        """
         if(not self.first_image_taken):
             self.create_folder()
             self.first_image_taken = True
@@ -104,17 +108,17 @@ class DroneControl:
 
         'captures images and gps locations of said images'
         if not self.debounce:
-            img_loc = self.folder_loc+'img_'+str(self.index)
-            self.camera.capture(img_loc+'.jpg')
-            msg="Image captured. Saved image as img_{}.jpg".format(self.index)
+            img_loc = self.folder_loc+'img_'+str(self.camera_index)
+            self.camera.capture_file(img_loc+'.jpg')
+            msg="Image captured. Saved image as img_{}.jpg".format(self.camera_index)
             self.print_debug(msg)
             
             # save geolocation of image
             try:
                 write_drone_location = open(self.folder_loc+self.gps_loc_filename,'a')
                 
-                output = '{},{:.7f},{:.7f},{:.2f},{} \n'.format(
-                    self.index,
+                output = '{},{:.7f},{:.7f},{:.2f},{}'.format(
+                    self.camera_index,
                     self.uav_position[0],
                     self.uav_position[1],
                     self.uav_position[2],
@@ -126,7 +130,7 @@ class DroneControl:
             except TypeError:
                 self.print_debug('WARN: No GPS fix... skipping file save')
                 pass
-            self.index += 1
+            self.camera_index += 1
 
             self.debounce = True
 
@@ -233,15 +237,16 @@ class DroneControl:
                 elif self.debounce:
                     self.debounce = False
 
-
-                self.print_debug("Testing: \n Armed: {} \n Mode {} \n RC Channels: {}".format(
-                    self.armed, self.mode, self.rc_channels))
+                if self.debug:
+                    self.print_debug("\033c Testing: \n Armed: {} \n Mode {} \n Captured Images {} \n RC Channels: {}".format(
+                        self.armed, self.mode, self.camera_index, self.rc_channels))
                 time.sleep(0.1)
         
 
         # Kill MAVlink connection when Ctrl-C is pressed (results in a lock)
         except KeyboardInterrupt:
             self.print_debug('CTRL-C has been pressed! Exiting...')
+            self.camera.stop()
             self.state = "EXIT"
             exit()
 
