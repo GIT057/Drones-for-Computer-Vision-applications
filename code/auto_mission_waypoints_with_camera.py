@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import picamera
-import datetime
+from picamera2 import Picamera2
 
 from distutils.debug import DEBUG
 from time import sleep
@@ -74,6 +73,7 @@ class mav_handler():
         self.print_debug('Saving media to: {}'.format(self.folder_loc))
 
         self.camera = self.init_camera()
+        self.camera.start()
         # connect to drone via pymavlink
         # self.mav_comm = mavutil.mavlink_connection(
         #     "udp:127.0.0.1:14540", autoreconnect=True)
@@ -100,11 +100,12 @@ class mav_handler():
         For information on the picamera API, see following URL:
         https://picamera.readthedocs.io/en/release-1.13/api_camera.html#
         '''
-        camera = picamera.PiCamera()
-        # camera.resolution = (2592, 1944)  # RPI Cam 1
-        camera.resolution = (3280, 2464) # RPI Cam 2
-        # camera.shutter_speed = 10000 # in microseconds.  1/100 second
-
+        camera = Picamera2()
+        
+        #camera_config = camera.create_still_configuration({'size':(3280, 2464)}) # RPI Cam 2
+        camera_config = camera.create_still_configuration({'size':(4608, 2592)}) # RPI Cam 3
+        camera.configure(camera_config)
+        
         return camera
 
     def capture(self):
@@ -412,6 +413,7 @@ class mav_handler():
             print('CTRL-C has been pressed! Exiting...')
             self.connected = False
             self.state = "EXIT"
+            self.camera.stop()
             exit()
 
 mh = mav_handler()
