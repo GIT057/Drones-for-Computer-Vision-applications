@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
+#Lab_pic_07_08_24:
 file_path = r"C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\9 aug 2024\photo_6174946972373467775_y.jpg"
-
-
+#Drone_pic_15_08_24:
+#file_path = r"C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\capture_15 Aug 2024\img_7.jpg"
+#Drone_pic_14_08_24:
 #file_path = r"C:\Users\grenz\Documents\GitHub\Drones-for-Computer-Vision-applications\Images\capture_14 Aug 2024\img_15.jpg"
 
 # Load the image
